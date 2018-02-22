@@ -1,8 +1,7 @@
 # mt940---simple
 Read MT940 records (ABNAMRO) and then convert them to QIF
-=========================================================================================
+
 MT940 -- ABNAMRO 
-=========================================================================================
 
 Converter from SWIFT format MT940 (ABNAMRO) to simple Quicken QIF format.
 
@@ -13,9 +12,7 @@ date <dd/mm/yyyy>, amount, payee, memo and then written to a QIF file <filename>
 There is no error capturing in the program and more written as proof of concept and finger 
 exercise learning python, after almost 30 years of not coding!
 
-=========================================================================================
 Usage
-=========================================================================================
 
 convert STA file::
 
