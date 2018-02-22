@@ -12,6 +12,8 @@ date <dd/mm/yyyy>, amount, payee, memo and then written to a QIF file <filename>
 There is no error capturing in the program and more written as proof of concept and finger 
 exercise learning python, after almost 30 years of not coding!
 
+Thanks to Mark Halder to give me a starting point!
+
 Usage
 
 convert STA file::
