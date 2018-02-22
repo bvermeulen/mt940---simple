@@ -7,7 +7,6 @@ import mt940m
 text = open(sys.argv[1]).read().splitlines()
 text = ''.join(text) +'-ABN'
 
-
 # make the qif file name with extension qif
 # based on file given in the argument
 fn = sys.argv[1].rsplit('.',1)[0]+'.qif'
