@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import re
 import sys
-import mt940m
+import mt940m_p36
 
 # read and concatenate entire MT940 contents and add '-ABN' to make sure the last record is captured
 text = open(sys.argv[1]).read().splitlines()
