@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import re
 import sys
-import mt940m_p36
+import mt940m
 
 # read and concatenate entire MT940 contents and add '-ABN' to make sure the last record is captured
 text = open(sys.argv[1]).read().splitlines()
@@ -36,34 +36,34 @@ for match in re.finditer(record_pat, text):
 	# each time a field 61 is encountered it will record the transaction with the details
 	# from the subsequent field 86
 	for match in re.finditer(field_pat,record):
-		num = match.group('num')
-        	field = match.group('field')
-	
-		if num == '61':
-			m = re.match(val61_pat, field)
-        		m_dict = m.groupdict()
+                num = match.group('num')
+                field = match.group('field')
 
-		if num == '86':
-			payee, memo = mt940m.code86(field)
+                if num == '61':
+                    m = re.match(val61_pat, field)
+                    m_dict = m.groupdict()
+
+                if num == '86':
+                    payee, memo = mt940m.code86(field)
 	
-        		transaction_date = m_dict['date']
-			valuta_date = m_dict['valuta']
-        	   	amount = m_dict['amount']
-        	   	amount = amount.replace(',', '.')
-        	   	if m_dict['sign'] == 'D':
-        	   		sign = '-'
-        	   	else:
-        	        	sign = ''
+                    transaction_date = m_dict['date']
+                    valuta_date = m_dict['valuta']
+                    amount = m_dict['amount']
+                    amount = amount.replace(',', '.')
+                    if m_dict['sign'] == 'D':
+                        sign = '-'
+                    else:
+                        sign = ''
         	     
-        	   	amount = '{0}{1}'.format(sign, amount)
-			if amount.endswith('.'):
-				amount = amount +'00'
-		
-		   	total_amount = total_amount + float(amount)
-        	   	date = mt940m.transaction_date_conversion(valuta_date, transaction_date)
+                    amount = '{0}{1}'.format(sign, amount)
+                    if amount.endswith('.'):
+                        amount = amount +'00'
 
-	           	print('{0}, {1}, {2}, {3}'.format(date, amount, payee, memo))
-			mt940m.write_qif_record (qif_file, date, amount, payee, memo)
+                    total_amount = total_amount + float(amount)
+                    date = mt940m.transaction_date_conversion(valuta_date, transaction_date)
+
+                    print('{0}, {1}, {2}, {3}'.format(date, amount, payee, memo))
+                    mt940m.write_qif_record (qif_file, date, amount, payee, memo)
 
 print ('The total sum of transfers is {}'.format(total_amount))
 qif_file.close()
