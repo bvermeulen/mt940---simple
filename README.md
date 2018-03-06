@@ -14,10 +14,19 @@ exercise learning python, after almost 30 years of not coding!
 
 Thanks to Mark Halder to give me a starting point!
 
-Usage
+Usage python 3.6
+
+convert STA file::
+
+    python mt940_p36.py <filename>
+
+output: <STA file>_<bank_account>.qit [a seperate qif file for each bank account]
+
+Usage python 2.7 (to be updated)
 
 convert STA file::
 
     python mt940.py <filename>
 
-output: <filename>
+output: <STA file>.qif
+
