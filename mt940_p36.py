@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import re
 import sys
-import mt940m
+import mt940m_p36
 
 # read and concatenate entire MT940 contents and add '-ABN' to make sure the last record is captured
 if len(sys.argv)== 2:
@@ -64,7 +64,7 @@ for match in re.finditer(record_pat, text):
             m_dict = m.groupdict()
 
         if num == '86':
-            payee, memo = mt940m.code86(field)
+            payee, memo = mt940m_p36.code86(field)
 
             transaction_date = m_dict['date']
             valuta_date = m_dict['valuta']
@@ -80,10 +80,10 @@ for match in re.finditer(record_pat, text):
                 amount = amount +'00'
 
             total_amount = total_amount + float(amount)
-            date = mt940m.transaction_date_conversion(valuta_date, transaction_date)
+            date = mt940m_p36.transaction_date_conversion(valuta_date, transaction_date)
 
 #           print ('{0}, {1}, {2}, {3}'.format(date, amount, payee, memo))
-            mt940m.write_qif_record (qif_file, date, amount, payee, memo)
+            mt940m_p36.write_qif_record (qif_file, date, amount, payee, memo)
 
 # on finishing the program close the last qif_file
 if fn !='':
