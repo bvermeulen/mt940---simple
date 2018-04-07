@@ -24,7 +24,7 @@ fn = ''
 record_pat = re.compile('(?P<record>:\d\d.??:.*?(?=-ABN))')
 
 # field_pat: pattern to seperate the fields in the MT940 file :num :field
-field_pat = re.compile(':(?P<num>\d\d.??):(?P<field>.*?(?=:\d\d.??:))')
+field_pat = re.compile(':(?P<num>\d\d).??:(?P<field>.*?(?=:\d\d.??:))')
 
 # val61_pat: pattern to seperate the values in field 61 
 #:valuta (date) :date (transaction date and used for date) :sign :amount :code :reference
@@ -43,51 +43,47 @@ for match in re.finditer(record_pat, text):
         # in case field number is equal to '25' check if it is a new bank_account. If new make new qif file using
         # the name of the bank account found in field '25'. Field 25 is assumed to be before field 61.
         if num == '25':
+            # close the qif file if this is not the first instance
             if field != bank_account and bank_account != '':
-                # close the qif file if this is not the first instance
                 qif_file.close()
-                print ('{}: the total sum of transfers is {:.2f}'.format(fn, total_amount))
-                total_amount = 0
+                end_balance = start_balance + total_amount
+                print ('{}: start balance: {:.2f} / transfers: {:.2f} / end balance: {:.2f}'  \
+                       .format(fn, start_balance, total_amount, end_balance))
+                total_amount  = 0
                 fn = ''
 
+            # open a new qif file if a new bank account is encountered
             if field != bank_account:
-                # open a new qif file if a new bank account is encountered
                 bank_account = field
+                new_bank_flag = True
                 fn = argf.rsplit('.',1)[0] # make the file name the same as the 1st argument + some changes
                 fn =  fn + '_' + bank_account +'.qif'
                 qif_file = open(fn,'w')
                 qif_file.write('!Type:Bank\n')
+
+        #find the start_balance for a new bank account in field 60
+        if num == '60' and new_bank_flag:
+            m=re.search(r'(\D)\d{6}.*?(?=[\d])(.*$)',field)
+            start_balance=float(mt940m_p36.conv_amount_str(m.group(1),m.group(2)))
+            new_bank_flag = False
                 
         # in case field number is '61' handle the transaction using the information in field 61 and subsequent 86
         if num == '61':
-            m = re.match(val61_pat, field)
-            m_dict = m.groupdict()
+            f61 = re.match(val61_pat, field)
+            f61_dict = f61.groupdict()
 
+        # in case field number is '86' handle to payee and memo and write the transaction to QIF
         if num == '86':
             payee, memo = mt940m_p36.code86(field)
-
-            transaction_date = m_dict['date']
-            valuta_date = m_dict['valuta']
-            amount = m_dict['amount']
-            amount = amount.replace(',', '.')
-            if m_dict['sign'] == 'D':
-                sign = '-'
-            else:
-                sign = ''
-     
-            amount = '{0}{1}'.format(sign, amount)
-            if amount.endswith('.'):
-                amount = amount +'00'
-
+            date = mt940m_p36.transaction_date_conversion(f61_dict['valuta'], f61_dict['date'])
+            amount = mt940m_p36.conv_amount_str(f61_dict['sign'], f61_dict['amount'])
             total_amount = total_amount + float(amount)
-            date = mt940m_p36.transaction_date_conversion(valuta_date, transaction_date)
-
-#           print ('{0}, {1}, {2}, {3}'.format(date, amount, payee, memo))
             mt940m_p36.write_qif_record (qif_file, date, amount, payee, memo)
 
 # on finishing the program close the last qif_file
 if fn !='':
     qif_file.close()
-    print ('{}: the total sum of transfers is {:.2f}'.format(fn, total_amount))
+    end_balance = start_balance + total_amount
+    print ('{}: start balance: {:.2f} transfers: {:.2f} end balance: {:.2f}'.format(fn, start_balance, total_amount, end_balance))
 else:
     print('this is not a valid MT940 file')
