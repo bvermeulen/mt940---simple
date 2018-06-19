@@ -1,7 +1,7 @@
 # mt940---simple
-Read MT940 records (ABNAMRO) and then convert them to QIF
+>Read MT940 records (ABNAMRO) and then convert them to QIF
 
-MT940 -- ABNAMRO 
+## MT940 -- ABNAMRO 
 
 Converter from SWIFT format MT940 (ABNAMRO) to simple Quicken QIF format.
 
@@ -14,19 +14,21 @@ exercise learning python, after almost 30 years of not coding!
 
 Thanks to Mark Halder to give me a starting point!
 
-Usage python 3.6
+## Usage python 3.6
 
 convert STA file::
 
-    python mt940_p36.py <filename>
+```sh
+    python3 mt940_p36.py <filename>
+```
 
 output: <STA file>_<bank_account>.qit [a seperate qif file for each bank account]
 
-Usage python 2.7 (to be updated)
+## Usage python 2.7 (to be updated)
 
 convert STA file::
-
+```sh
     python mt940.py <filename>
-
+``` 
 output: <STA file>.qif
 
