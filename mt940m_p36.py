@@ -67,8 +67,8 @@ def code86(string86):
     m = re.sub('\s+',' ',m.strip())
     # add space in front as otherwise some transactions are not imported
     # not clear why this is. For consistancy we do the same for payee
-    m = ' ' + m
-    p = ' ' + p
+    # m = ' ' + m
+    # p = ' ' + p
     return p,m
 
 # convert amount string in proper format and output as string
