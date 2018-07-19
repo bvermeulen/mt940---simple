@@ -9,7 +9,7 @@ if len(sys.argv)== 2:
 else:
     print('please provide a valid MT940 file')
     exit()
-    
+
 text = open(argf).read().splitlines()
 text = ''.join(text) +'-ABN'
 
@@ -26,15 +26,15 @@ record_pat = re.compile('(?P<record>:\d\d.??:.*?(?=-ABN))')
 # field_pat: pattern to seperate the fields in the MT940 file :num :field
 field_pat = re.compile(':(?P<num>\d\d).??:(?P<field>.*?(?=:\d\d.??:))')
 
-# val61_pat: pattern to seperate the values in field 61 
+# val61_pat: pattern to seperate the values in field 61
 #:valuta (date) :date (transaction date and used for date) :sign :amount :code :reference
 val61_pat = re.compile('(?P<valuta>\d{6})(?P<date>\d{4})(?P<sign>\D)'
                        '(?P<amount>\d+[,.]\d*)(?P<code>\w{4})(?P<reference>\w+$)')
 
 for match in re.finditer(record_pat, text):
-    # add token ':99:' to the end of the record to make sure the last field is also captured	
+    # add token ':99:' to the end of the record to make sure the last field is also captured
     record = match.group('record') +':99:'
-	
+
     # parse the string in a field number 'num' and its corresponding 'field'
     for match in re.finditer(field_pat,record):
         num = match.group('num')
@@ -66,7 +66,7 @@ for match in re.finditer(record_pat, text):
             m=re.search(r'(\D)\d{6}.*?(?=[\d])(.*$)',field)
             start_balance=float(mt940m_p36.conv_amount_str(m.group(1),m.group(2)))
             new_bank_flag = False
-                
+
         # in case field number is '61' handle the transaction using the information in field 61 and subsequent 86
         if num == '61':
             f61 = re.match(val61_pat, field)
@@ -74,9 +74,9 @@ for match in re.finditer(record_pat, text):
 
         # in case field number is '86' handle to payee and memo and write the transaction to QIF
         if num == '86':
-            payee, memo = mt940m_p36.code86(field)
             date = mt940m_p36.transaction_date_conversion(f61_dict['valuta'], f61_dict['date'])
             amount = mt940m_p36.conv_amount_str(f61_dict['sign'], f61_dict['amount'])
+            payee, memo = mt940m_p36.code86(field, bank_account, date, amount)
             total_amount = total_amount + float(amount)
             mt940m_p36.write_qif_record (qif_file, date, amount, payee, memo)
 
