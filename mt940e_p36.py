@@ -1,5 +1,25 @@
-from tkinter import Tk, Text
+from tkinter import Tk, Label, Frame, Entry
 import re
+import pdb # noqa F401
+
+PADDING = 7
+WIDTH = 230
+FONT = ('courier', 10)
+HELP_TEXT = '       s - skip, <start> <end> m - memo, '\
+            '<start> <end> p - payee, u - undo, q - quit, enter'
+TEXT1 = '0                                                 '\
+        '                                                 1'\
+        '                                                  '\
+        '                                                 2\n'
+
+TEXT2 = '0        1         2         3         4         5'\
+        '         6         7         8         9         0'\
+        '         1         2         3         4         5'\
+        '         6         7         8         9         0\n'
+TEXT3 = '12345678901234567890123456789012345678901234567890'\
+        '12345678901234567890123456789012345678901234567890'\
+        '12345678901234567890123456789012345678901234567890'\
+        '12345678901234567890123456789012345678901234567890\n'
 
 
 class Editor:
@@ -11,14 +31,6 @@ class Editor:
          - display
          - parse
     '''
-    TEXT1 = '         1         2         3         4         5'\
-            '         6         7         8         9         0'\
-            '         1         2         3         4         6\n'
-    TEXT2 = '12345678901234567890123456789012345678901234567890'\
-            '12345678901234567890123456789012345678901234567890'\
-            '12345678901234567890123456789012345678901234567890\n'
-    TEXT3 = 'GIF> '
-
     @classmethod
     def edit(cls, string86, bank_account, date, amount):
         '''  main method for the class creating a tkinter window for editing
@@ -38,9 +50,41 @@ class Editor:
         cls.memo_list = [cls.memo]
 
         root = Tk()
-        cls.displaytext = Text(root, width=200)
-        cls.displaytext.pack()
-        cls.displaytext.bind("<Return>", cls.handle_input)
+        root.title('QIF Editor')
+        cls.info_frame = Frame(root,
+                               relief='ridge',
+                               highlightbackground='black',
+                               highlightcolor='black',
+                               highlightthickness=2,
+                               bg='white')
+
+        cls.str86_frame = Frame(root,
+                                relief='ridge',
+                                highlightbackground='black',
+                                highlightcolor='black',
+                                highlightthickness=2,
+                                bg='white')
+
+        cls.input_frame = Frame(root,
+                                relief='ridge',
+                                highlightbackground='black',
+                                highlightcolor='black',
+                                highlightthickness=2,
+                                bg='white')
+
+        cls.info_frame.pack(anchor='w', padx=PADDING, pady=PADDING)
+        cls.str86_frame.pack(anchor='w', padx=PADDING, pady=PADDING)
+        cls.input_frame.pack(anchor='w', padx=PADDING, pady=PADDING)
+        cls.l_info = Label(cls.info_frame)
+        cls.l_str86 = Label(cls.str86_frame)
+        cls.l_info.pack()
+        cls.l_str86.pack()
+
+        Label(cls.input_frame, text='>>').pack(side='left')
+        cls.command = Entry(cls.input_frame, width=10)
+        cls.command.pack(side='left')
+        Label(cls.input_frame, text=HELP_TEXT).pack(side='left')
+        cls.command.bind("<Return>", cls.handle_input)
 
         while not cls.exit_flag:
             if cls.input_flag:
@@ -59,23 +103,22 @@ class Editor:
              'q' - quit, 'u' - undo, 's' - skip, ''<start> <end> p' and
              ''<start> <end> m'
         '''
-        text_input = cls.displaytext.get(10.4, 'end')
+        text_input = cls.command.get()
         text_input = text_input.strip()
-        start, end, command = cls.parse(text_input)
+        start, end, instruction = cls.parse(text_input)
 
-        if end >= len(cls.string86):
-            end = len(cls.string86)-1  # leave the /n !
-
-        if command == 'q':
+        if instruction == 'q':
             cls.exit_flag = True
 
-        elif command == 's':
+        elif instruction == 's':
             cls.exit_flag = True
             cls.payee = 'MANUAL'
             cls.memo = cls.string86_list[0]
 
-        elif command == 'u':
-            try:
+        elif instruction == 'u':
+            assert len(cls.payee_list) == len(cls.memo_list), 'check this out'
+
+            if len(cls.payee_list) > 1:
                 del cls.string86_list[-1]
                 del cls.payee_list[-1]
                 del cls.memo_list[-1]
@@ -83,35 +126,37 @@ class Editor:
                 cls.payee = cls.payee_list[-1]
                 cls.memo = cls.memo_list[-1]
 
-            except Exception as e:
+            else:
                 print('cannot undo')
 
         elif (start < 0) or (end < start):
             print('invalid entry')
 
-        elif command == 'p':
+        elif instruction == 'p':
             if not cls.payee:
                 cls.payee = cls.string86[start:end]
             else:
                 cls.payee = cls.payee + ' - ' + cls.string86[start:end]
 
+            cls.payee = cls.payee.replace('\n', '')
             cls.string86 = cls.string86.replace(cls.string86[start:end], '')
             cls.string86_list.append(cls.string86)
             cls.payee_list.append(cls.payee)
-            cls.memo_list.append('')
+            cls.memo_list.append(cls.memo)
 
-        elif command == 'm':
+        elif instruction == 'm':
             if not cls.memo:
                 cls.memo = cls.string86[start:end]
             else:
                 cls.memo = cls.memo + ' - ' + cls.string86[start:end]
 
+            cls.memo = cls.memo.replace('\n', '')
             cls.string86 = cls.string86.replace(cls.string86[start:end], '')
             cls.string86_list.append(cls.string86)
             cls.memo_list.append(cls.memo)
-            cls.payee_list.append('')
+            cls.payee_list.append(cls.payee)
 
-        cls.displaytext.delete(1.0, 'end')
+        cls.command.delete(0, 'end')
         cls.input_flag = True
 
     @classmethod
@@ -121,11 +166,17 @@ class Editor:
         cls.input_flag = False
         _payee = 'Payee: ' + cls.payee + '\n'
         _memo = 'Memo: ' + cls.memo + '\n'
-        text = ''.join([cls.bank_account, cls.date, cls.amount,
-                        _payee, _memo, '\n',
-                        cls.TEXT1, cls.TEXT2, cls.string86, cls.TEXT3])
-        cls.displaytext.insert(1.0, text)
-        cls.displaytext.mark_set("insert", 10.4)
+        info_text = ''.join([cls.bank_account, cls.date, cls.amount,
+                            _payee, _memo])
+        str86_text = ''.join([TEXT1, TEXT2, TEXT3, cls.string86])
+        cls.l_info.forget()
+        cls.l_str86.forget()
+        cls.l_info = Label(cls.info_frame, text=info_text, width=WIDTH,
+                           font=FONT, anchor='w', justify='left')
+        cls.l_str86 = Label(cls.str86_frame, text=str86_text, width=WIDTH,
+                            font=FONT, anchor='w', justify='left')
+        cls.l_info.pack()
+        cls.l_str86.pack()
 
     @staticmethod
     def parse(text_input):
