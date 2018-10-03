@@ -39,6 +39,8 @@ class ParseMT940:
 
             if _search:
                 memo = _search.group(1)
+            else:
+                memo = ''
 
             if memo.isdigit():
                 _search = re.search('//REMI/.*?(?=/)/(.*?(?=//))', string86)
@@ -48,6 +50,9 @@ class ParseMT940:
 
         elif code == 'SEPA ':
             _search = re.search('IBAN:(.*?(?=BIC:))', string86)
+
+            if not _search:
+                _search = re.search('INCASSANT:(.*?(?=NAAM:))', string86)
 
             if _search:
                 payee = _search.group(1).strip() + ' - '
