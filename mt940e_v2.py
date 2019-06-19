@@ -5,7 +5,7 @@ import pdb # noqa F401
 PADDING = 7
 FONT = ('courier', 10)
 HELP_TEXT = '  s - skip, <start> <end> m - memo, '\
-            '<start> <end> p - payee, u - undo, q - quit, enter'
+            '<start> <end> p - payee, u - undo, press enter to complete transaction'
 
 
 class Editor:
@@ -101,7 +101,7 @@ class Editor:
         text_input = text_input.strip()
         start, end, instruction = cls.parse(text_input)
 
-        if instruction == 'q':
+        if instruction == 'enter':
             cls.exit_flag = True
 
         elif instruction == 's':
@@ -179,8 +179,8 @@ class Editor:
         start = -1
         end = -1
         command = ''
-        if text_input in ['q', 'Q']:  # quit editing
-            command = 'q'
+        if text_input == '':  # quit editing
+            command = 'enter'
 
         elif text_input in ['u', 'U']:  # undo entry
             command = 'u'
@@ -196,7 +196,6 @@ class Editor:
                 start = int(_.group(1))-1
                 end = int(_.group(2))
                 command = _.group(3).lower()
-                print(start, end, command)
 
             except Exception as e:
                 print(e)

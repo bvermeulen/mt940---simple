@@ -94,9 +94,9 @@ class ParseMT940:
         else:
             string86 = re.sub(' +', ' ', string86)
             payee, memo = Editor.edit(string86, bank_account, date, amount)
-            cls.cutoff = 200
 
         memo = re.sub('\s+', ' ', memo.strip())[:cls.cutoff]
+        payee = re.sub('\s+', ' ', payee.strip())[:cls.cutoff]
         return payee, memo
 
     @staticmethod
@@ -114,7 +114,7 @@ class ParseMT940:
 
         if amount.endswith('.'):
             amount = amount + '00'
-
+        
         return amount
 
     @staticmethod

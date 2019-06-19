@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 import re
 import sys
+import decimal
 from mt940m_v2 import ParseMT940
+
+D = decimal.Decimal
 
 # read and concatenate entire MT940 contents and add '-ABN' to make sure the last record is captured
 if len(sys.argv)== 2:
@@ -15,7 +18,7 @@ text = ''.join(text) +'-ABN'
 
 payee = ''
 memo = ''
-total_amount = 0
+total_amount = D('0')
 bank_account = ''
 fn = ''
 
@@ -49,7 +52,7 @@ for match in re.finditer(record_pat, text):
                 end_balance = start_balance + total_amount
                 print ('{}: start balance: {:.2f} / transfers: {:.2f} / end balance: {:.2f}'  \
                        .format(fn, start_balance, total_amount, end_balance))
-                total_amount  = 0
+                total_amount  = D('0')
                 fn = ''
 
             # open a new qif file if a new bank account is encountered
@@ -64,7 +67,7 @@ for match in re.finditer(record_pat, text):
         #find the start_balance for a new bank account in field 60
         if num == '60' and new_bank_flag:
             m=re.search(r'(\D)\d{6}.*?(?=[\d])(.*$)',field)
-            start_balance=float(ParseMT940.conv_amount_str(m.group(1),m.group(2)))
+            start_balance=D(ParseMT940.conv_amount_str(m.group(1),m.group(2)))
             new_bank_flag = False
 
         # in case field number is '61' handle the transaction using the information in field 61 and subsequent 86
@@ -77,13 +80,13 @@ for match in re.finditer(record_pat, text):
             date = ParseMT940.transaction_date_conversion(f61_dict['valuta'], f61_dict['date'])
             amount = ParseMT940.conv_amount_str(f61_dict['sign'], f61_dict['amount'])
             payee, memo = ParseMT940.code86(field, bank_account, date, amount)
-            total_amount = total_amount + float(amount)
+            total_amount += D(amount)
             ParseMT940.write_qif_record (qif_file, date, amount, payee, memo)
 
 # on finishing the program close the last qif_file
 if fn !='':
     qif_file.close()
     end_balance = start_balance + total_amount
-    print ('{}: start balance: {:.2f} transfers: {:.2f} end balance: {:.2f}'.format(fn, start_balance, total_amount, end_balance))
+    print ('{}: start balance: {:.2f} / transfers: {:.2f} / end balance: {:.2f}'.format(fn, start_balance, total_amount, end_balance))
 else:
     print('this is not a valid MT940 file')
