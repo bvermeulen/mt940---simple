@@ -24,15 +24,15 @@ fn = ''
 
 # record: pattern to determine a MT940 record group, note more than one transaction
 # is possible within a record
-record_pat = re.compile('(?P<record>:\d\d.??:.*?(?=-ABN))')
+record_pat = re.compile(r'(?P<record>:\d\d.??:.*?(?=-ABN))')
 
 # field_pat: pattern to seperate the fields in the MT940 file :num :field
-field_pat = re.compile(':(?P<num>\d\d).??:(?P<field>.*?(?=:\d\d.??:))')
+field_pat = re.compile(r':(?P<num>\d\d).??:(?P<field>.*?(?=:\d\d.??:))')
 
 # val61_pat: pattern to seperate the values in field 61
 #:valuta (date) :date (transaction date and used for date) :sign :amount :code :reference
-val61_pat = re.compile('(?P<valuta>\d{6})(?P<date>\d{4})(?P<sign>\D)'
-                       '(?P<amount>\d+[,.]\d*)(?P<code>\w{4})(?P<reference>\w+$)')
+val61_pat = re.compile(r'(?P<valuta>\d{6})(?P<date>\d{4})(?P<sign>\D)'
+                       r'(?P<amount>\d+[,.]\d*)(?P<code>\w{4})(?P<reference>\w+$)')
 
 for match in re.finditer(record_pat, text):
     # add token ':99:' to the end of the record to make sure the last field is also captured
